@@ -690,7 +690,8 @@ static SUNXI_CCU_GATE(dram_ace_clk,	"dram-ace",	"pll-ddr",
 static const char *const de_parents[] = { "pll-video0", "pll-video1",
 					   "pll-ddr-other" };
 static SUNXI_CCU_M_WITH_MUX_GATE(de_be0_clk, "de-be0", de_parents,
-				 0x104, 0, 4, 24, 2, BIT(31), 0);
+				 0x104, 0, 4, 24, 2, BIT(31),
+				 CLK_SET_RATE_NO_REPARENT);
 
 static SUNXI_CCU_M_WITH_MUX_GATE(de_be1_clk, "de-be1", de_parents,
 				 0x108, 0, 4, 24, 2, BIT(31),
