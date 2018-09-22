@@ -12,11 +12,13 @@
 
 #include <drm/drmP.h>
 #include <drm/drm_atomic_helper.h>
+#include <drm/drm_connector.h>
 #include <drm/drm_crtc.h>
 #include <drm/drm_crtc_helper.h>
 #include <drm/drm_encoder.h>
 #include <drm/drm_modes.h>
 #include <drm/drm_of.h>
+#include <drm/drm_panel.h>
 
 #include <uapi/drm/drm_mode.h>
 
@@ -418,7 +420,9 @@ static void sun4i_tcon0_mode_set_rgb(struct sun4i_tcon *tcon,
 				     const struct drm_display_mode *mode)
 {
 	unsigned int bp, hsync, vsync;
+	u32 bus_format = 0;
 	u8 clk_delay;
+	struct drm_connector *connector = tcon->panel->connector;
 	u32 val = 0;
 
 	WARN_ON(!tcon->quirks->has_channel_0);
@@ -477,6 +481,47 @@ static void sun4i_tcon0_mode_set_rgb(struct sun4i_tcon *tcon,
 	regmap_update_bits(tcon->regs, SUN4I_TCON0_IO_POL_REG,
 			   SUN4I_TCON0_IO_POL_HSYNC_POSITIVE | SUN4I_TCON0_IO_POL_VSYNC_POSITIVE,
 			   val);
+
+	/*
+	 * FIXME: Undocumented bits
+	 *
+	 * These parameters, nor the whole dithering process, are not
+	 * explained in the vendor documents or BSP kernel code.
+	 */
+	regmap_write(tcon->regs, SUN4I_TCON0_FRM_SEED0_REG, 0x11111111);
+	regmap_write(tcon->regs, SUN4I_TCON0_FRM_SEED1_REG, 0x11111111);
+	regmap_write(tcon->regs, SUN4I_TCON0_FRM_SEED2_REG, 0x11111111);
+	regmap_write(tcon->regs, SUN4I_TCON0_FRM_SEED3_REG, 0x11111111);
+	regmap_write(tcon->regs, SUN4I_TCON0_FRM_SEED4_REG, 0x11111111);
+	regmap_write(tcon->regs, SUN4I_TCON0_FRM_SEED5_REG, 0x11111111);
+	regmap_write(tcon->regs, SUN4I_TCON0_FRM_TAB0_REG, 0x01010000);
+	regmap_write(tcon->regs, SUN4I_TCON0_FRM_TAB1_REG, 0x15151111);
+	regmap_write(tcon->regs, SUN4I_TCON0_FRM_TAB2_REG, 0x57575555);
+	regmap_write(tcon->regs, SUN4I_TCON0_FRM_TAB3_REG, 0x7f7f7777);
+
+	val = 0;
+
+	/* Do dithering if panel only supports 6 bits per color */
+	if (connector->display_info.bpc == 6)
+		val |= SUN4I_TCON0_FRM_CTL_ENABLE;
+
+	if (connector->display_info.num_bus_formats)
+		bus_format = connector->display_info.bus_formats[0];
+
+	switch (bus_format) {
+	case MEDIA_BUS_FMT_RGB565_1X16:
+		/* R and B components are only 5 bits deep */
+		val |= SUN4I_TCON0_FRM_CTL_MODE_R;
+		val |= SUN4I_TCON0_FRM_CTL_MODE_B;
+	case MEDIA_BUS_FMT_RGB666_1X18:
+		/* Fall through: enable dithering */
+		val |= SUN4I_TCON0_FRM_CTL_ENABLE;
+		break;
+	}
+
+	/* Write dithering settings */
+	regmap_write(tcon->regs, SUN4I_TCON0_FRM_CTL_REG, val);
+
 
 	/* Map output pins to channel 0 */
 	regmap_update_bits(tcon->regs, SUN4I_TCON_GCTL_REG,
