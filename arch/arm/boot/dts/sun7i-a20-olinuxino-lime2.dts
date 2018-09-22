@@ -46,6 +46,7 @@
 
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/pwm/pwm.h>
 
 / {
 	model = "Olimex A20-OLinuXino-LIME2";
@@ -53,6 +54,13 @@
 
 	aliases {
 		serial0 = &uart0;
+	};
+
+	backlight: backlight {
+		compatible = "pwm-backlight";
+		pwms = <&pwm 0 10000 PWM_POLARITY_INVERTED>;
+		brightness-levels = <0 10 20 30 40 50 60 70 80 90 100>;
+		default-brightness-level = <8>;
 	};
 
 	chosen {
@@ -79,6 +87,25 @@
 			label = "a20-olinuxino-lime2:green:usr";
 			gpios = <&pio 7 2 GPIO_ACTIVE_HIGH>;
 			default-state = "on";
+		};
+	};
+
+	panel: panel {
+		compatible = "olimex,lcd-olinuxino-43-ts";
+		backlight = <&backlight>;
+		enable-gpios = <&pio 7 8 GPIO_ACTIVE_HIGH>; /* PH8 */
+		pinctrl-names = "default";
+		pinctrl-0 = <&lcd0_enable_pin &lcd0_rgb888_pins>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			panel_input: endpoint {
+				remote-endpoint = <&tcon0_out_panel>;
+			};
 		};
 	};
 
@@ -159,7 +186,8 @@
 	pinctrl-0 = <&mmc0_pins_a>;
 	vmmc-supply = <&reg_vcc3v3>;
 	bus-width = <4>;
-	cd-gpios = <&pio 7 1 GPIO_ACTIVE_LOW>; /* PH1 */
+	cd-gpios = <&pio 7 1 GPIO_ACTIVE_HIGH>; /* PH1 */
+	cd-inverted;
 	status = "okay";
 };
 
@@ -178,6 +206,11 @@
 &pio {
 	ahci_pwr_pin_olinuxinolime: ahci_pwr_pin@1 {
 		pins = "PC3";
+		function = "gpio_out";
+	};
+
+	lcd0_enable_pin: lcd0_enable_pin@0 {
+		pins = "PH8";
 		function = "gpio_out";
 	};
 
@@ -204,6 +237,13 @@
 		function = "gpio_out";
 	};
 };
+
+&pwm {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pwm0_pins_a>;
+	status = "okay";
+};
+
 
 &reg_ahci_5v {
 	pinctrl-0 = <&ahci_pwr_pin_olinuxinolime>;
@@ -265,6 +305,17 @@
 
 &reg_usb2_vbus {
 	status = "okay";
+};
+
+&rtp {
+	allwinner,ts-attached;
+};
+
+&tcon0_out {
+	tcon0_out_panel: endpoint@0 {
+		reg = <0>;
+		remote-endpoint = <&panel_input>;
+	};
 };
 
 &uart0 {
