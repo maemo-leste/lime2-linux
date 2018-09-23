@@ -47,4 +47,116 @@
 / {
 	model = "Q8 A33 Tablet";
 	compatible = "allwinner,q8-a33", "allwinner,sun8i-a33";
+
+    panel: panel {
+            /* compatible should be set according to the panel */
+            compatible = "unk,qc760bg1_1024_600_72";
+            pinctrl-names = "default";
+            pinctrl-0 = <&lcd_en_q8>;
+            backlight = <&backlight>;
+            enable-gpios = <&pio 7 7 GPIO_ACTIVE_HIGH>; /* PH7 */
+            power-supply = <&reg_dc1sw>;
+            status = "ok";
+            #address-cells = <1>;
+            #size-cells = <0>;
+
+            port@0 {
+                    reg = <0>;
+                    #address-cells = <1>;
+                    #size-cells = <0>;
+
+                    panel_input: endpoint@0 {
+                            reg = <0>;
+                            remote-endpoint = <&tcon0_out_lcd>;
+                    };
+            };
+        };
+};
+
+&codec {
+        status = "okay";
+};
+
+&dai {
+        status = "okay";
+};
+
+&sound {
+        status = "okay";
+};
+
+&tcon0 {
+        pinctrl-names = "default";
+        pinctrl-0 = <&lcd_rgb666_pins>;
+        status = "okay";
+};
+
+&tcon0_out {
+        tcon0_out_lcd: endpoint@0 {
+                reg = <0>;
+                remote-endpoint = <&panel_input>;
+        };
+};
+
+&pio {
+        lcd_en_q8: lcd_en@0 {
+                // allwinner,pins = "PH7";
+                // allwinner,function = "gpio_out";
+                // allwinner,drive = <SUN4I_PINCTRL_10_MA>;
+                // allwinner,pull = <SUN4I_PINCTRL_NO_PULL>;
+				pins = "PH7";
+				function = "gpio_out";
+				drive-strength = <10>;
+				bias-no-pull;
+        };
+};
+
+&touchscreen {
+        reg = <0x40>;
+        compatible = "silead,gsl1680";
+        //firmware-name = "U701C_GSL168XX_PG_6001024.fw";
+        firmware-name = "gsl1680-b482-q8-a70.fw";
+        touchscreen-size-x = <1024>;
+        touchscreen-size-y = <600>;
+	touchscreen-inverted-x;
+        //touchscreen-size-x = <960>;
+        //touchscreen-size-y = <640>;
+	vddio-supply = <&reg_ldo_io1>;
+        status = "okay";
+};
+
+&mmc1_pins_a {
+        // allwinner,pull = <SUN4I_PINCTRL_PULL_UP>;
+		bias-pull-up;
+};
+
+&mmc1 {
+        pinctrl-names = "default";
+        pinctrl-0 = <&mmc1_pins_a>;
+        vmmc-supply = <&reg_dldo1>;
+        bus-width = <4>;
+        non-removable;
+        status = "okay";
+
+        rtl8723bs: sdio_wifi@1 {
+                reg = <1>;
+        };
+};
+
+
+&mmc2 {
+        pinctrl-names = "default";
+        pinctrl-0 = <&mmc2_8bit_pins>;
+        vmmc-supply = <&reg_dcdc1>;
+        bus-width = <8>;
+        non-removable;
+        cap-mmc-hw-reset;
+        status = "okay";
+};
+
+&mmc2_8bit_pins {
+        /* Increase drive strength for DDR modes */
+        drive-strength = <40>;
+        /* eMMC is missing pull-ups */
+        bias-pull-up;
 };
