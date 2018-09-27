@@ -114,8 +114,8 @@
 &touchscreen {
         reg = <0x40>;
         compatible = "silead,gsl1680";
-        //firmware-name = "U701C_GSL168XX_PG_6001024.fw";
-        firmware-name = "gsl1680-b482-q8-a70.fw";
+        firmware-name = "U701C_GSL168XX_PG_6001024.fw";
+        //firmware-name = "gsl1680-b482-q8-a70.fw";
         touchscreen-size-x = <1024>;
         touchscreen-size-y = <600>;
 	touchscreen-inverted-x;
