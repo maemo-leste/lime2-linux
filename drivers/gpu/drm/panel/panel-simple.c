@@ -2312,6 +2312,29 @@ static const struct drm_display_mode winstar_wf35ltiacd_mode = {
 	.flags = DRM_MODE_FLAG_NVSYNC | DRM_MODE_FLAG_NHSYNC,
 };
 
+static const struct drm_display_mode unk_qc760bg1_1024_600_72_mode = {
+       .clock = 62000,                    // pclk_khz (FEX: lcd_dclk_freq * 1000)
+       .hdisplay = 1024,                   // x (FEX: lcd_x)
+       .hsync_start = 1024 + 160,          // x + ri
+       .hsync_end = 1024 + 160 + 1,        // x + ri + hs
+       .htotal = 1024 + 160 + 1 + 160,     // x + ri + hs + le (FEX: lcd_ht)
+       .vdisplay = 600,                    // y (FEX: lcd_y)
+       .vsync_start = 600 + 12,            // y + lo
+       .vsync_end = 600 + 12 + 1,          // y + lo + vs
+       .vtotal = 600 + 12 + 1 + 23,        // y + lo + vs + up (FEX: lcd_vt / 2)
+       .vrefresh = 72,
+};
+
+static const struct panel_desc unk_qc760bg1_1024_600_72 = {
+       .modes = &unk_qc760bg1_1024_600_72_mode,
+       .num_modes = 1,
+       .bpc = 6,
+       .size = {
+               .width = 250,
+               .height = 180,
+       },
+};
+
 static const struct panel_desc winstar_wf35ltiacd = {
 	.modes = &winstar_wf35ltiacd_mode,
 	.num_modes = 1,
@@ -2334,6 +2357,9 @@ static const struct of_device_id platform_of_match[] = {
 		.compatible = "auo,b101aw03",
 		.data = &auo_b101aw03,
 	}, {
+        .compatible = "unk,qc760bg1_1024_600_72",
+        .data = &unk_qc760bg1_1024_600_72,
+    }, {
 		.compatible = "auo,b101ean01",
 		.data = &auo_b101ean01,
 	}, {
